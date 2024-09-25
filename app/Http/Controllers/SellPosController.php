@@ -203,7 +203,7 @@ class SellPosController extends Controller
         }
 
         $warehouse_locations = WarehouseLocation::forDropdown($business_id, false, true);
-        $bl_attributes = $warehouse_locations['attributes'];
+        $wh_attributes = $warehouse_locations['attributes'];
         $warehouse_locations = $warehouse_locations['locations'];
 
         $wh_location = null;
