@@ -819,11 +819,6 @@ class AdminSidebarMenu
                                 action([\App\Http\Controllers\BusinessLocationController::class, 'index']),
                                 __('business.business_locations'),
                                 ['icon' => '', 'active' => request()->segment(1) == 'business-location']
-                            );                            
-                            $sub->url(
-                                action([\App\Http\Controllers\WarehouseLocationController::class, 'index']),
-                                'Warehouse',
-                                ['icon' => '', 'active' => request()->segment(1) == 'warehouse']
                             );
                         }
                         if (auth()->user()->can('invoice_settings.access')) {
