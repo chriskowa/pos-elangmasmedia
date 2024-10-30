@@ -20,12 +20,9 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./ # Folder proyek Laravel lokal
-          server-dir: /public_html/pos.elangmasmedia.com # Folder tujuan di server
+          local-dir: ./ 
+          server-dir: pos.elangmasmedia.com /
           method: ftp
-          port: 21 # Port FTP Niagahoster
-          exclude:
-            - ".git*"
-            - "node_modules"
-            - "storage"
-            - "vendor"
+          port: 21
+         
+           
