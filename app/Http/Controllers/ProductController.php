@@ -284,14 +284,26 @@ class ProductController extends Controller
                         return '--';
                     }
                 })
-                ->addColumn(
-                    'purchase_price',
-                    '<div style="white-space: nowrap;">@format_currency($min_purchase_price) @if($max_purchase_price != $min_purchase_price && $type == "variable") -  @format_currency($max_purchase_price)@endif </div>'
-                )
-                ->addColumn(
-                    'selling_price',
-                    '<div style="white-space: nowrap;">@format_currency($min_price) @if($max_price != $min_price && $type == "variable") -  @format_currency($max_price)@endif </div>'
-                )
+                ->addColumn('purchase_price', function($row) {
+                    $min_purchase_price = $row->min_purchase_price;
+                    $max_purchase_price = $row->max_purchase_price;
+                    $type = $row->type;
+                
+                    return '<input class="form-control input-sm" type="text" name="purchase_price" value="' . number_format($min_purchase_price, 2) . '"'
+                        . (($max_purchase_price != $min_purchase_price && $type == 'variable') 
+                            ? ' data-max-price="' . number_format($max_purchase_price, 2) . '"' 
+                            : '') . '>';
+                })
+                ->addColumn('selling_price', function($row) {
+                    $min_price = $row->min_price;
+                    $max_price = $row->max_price;
+                    $type = $row->type;
+                
+                    return '<input class="form-control input-sm" type="text" name="selling_price" value="' . number_format($min_price, 2) . '"'
+                        . (($max_price != $min_price && $type == 'variable') 
+                            ? ' data-max-price="' . number_format($max_price, 2) . '"' 
+                            : '') . '>';
+                })                
                 ->filterColumn('products.sku', function ($query, $keyword) {
                     $query->whereHas('variations', function ($q) use ($keyword) {
                         $q->where('sub_sku', 'like', "%{$keyword}%");
@@ -324,6 +336,10 @@ class ProductController extends Controller
         $business_locations = BusinessLocation::forDropdown($business_id);
         $business_locations->prepend(__('lang_v1.none'), 'none');
 
+         // Ambil variation untuk bisnis lokasi
+        $variation_values = VariationTemplate::forDropdown($business_id);
+        $variation_values->prepend(__('lang_v1.none'), 'none');
+
         if ($this->moduleUtil->isModuleInstalled('Manufacturing') && (auth()->user()->can('superadmin') || $this->moduleUtil->hasThePermissionInSubscription($business_id, 'manufacturing_module'))) {
             $show_manufacturing_data = true;
         } else {
@@ -343,6 +359,7 @@ class ProductController extends Controller
                 'units',
                 'taxes',
                 'business_locations',
+                'variation_values',
                 'show_manufacturing_data',
                 'pos_module_data',
                 'is_woocommerce',
@@ -671,7 +688,7 @@ class ProductController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
-    {
+    {        
         if (! auth()->user()->can('product.update')) {
             abort(403, 'Unauthorized action.');
         }
@@ -901,6 +918,53 @@ class ProductController extends Controller
 
         return redirect('products')->with('status', $output);
     }
+
+    public function updatePrice(Request $request, $id)
+    {
+        if (! auth()->user()->can('product.update')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        try {
+            $business_id = $request->session()->get('user.business_id');
+            DB::beginTransaction();
+
+            // Cari produk berdasarkan ID
+            $product = Product::where('business_id', $business_id)
+                            ->where('id', $id)
+                            ->first();
+
+            if (!$product) {
+                throw new \Exception('Product not found');
+            }
+
+            // Jika produk tipe "single", update harga di table variations
+            
+                //$single_data = $request->only(['single_dpp', 'single_dsp', 'single_dpp_inc_tax', 'single_dsp_inc_tax', 'profit_percent']);
+                
+                $variation = $product->variations()->first(); // Ambil varian pertama
+                if ($variation) {
+                    $variation->default_purchase_price = $this->productUtil->num_uf($request->input('purchase_price'));
+                    $variation->dpp_inc_tax = $this->productUtil->num_uf($request->input('purchase_price'));
+                    $variation->default_sell_price = $this->productUtil->num_uf($request->input('selling_price'));
+                    $variation->sell_price_inc_tax = $this->productUtil->num_uf($request->input('selling_price'));
+                    $variation->profit_percent = $this->productUtil->num_uf(($request->input('selling_price') - $request->input('purchase_price')) / $request->input('purchase_price') * 100);
+                    $variation->save();
+                }
+            
+
+            $product->save();
+            DB::commit();
+
+            return response()->json(['success' => 1, 'msg' => __('product.price_updated_successfully')]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::emergency('File: '.$e->getFile().' Line: '.$e->getLine().' Message: '.$e->getMessage());
+
+            return response()->json(['success' => 0, 'msg' => $e->getMessage()]);
+        }
+    }
+
 
     /**
      * Remove the specified resource from storage.

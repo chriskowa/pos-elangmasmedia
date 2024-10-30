@@ -31,7 +31,6 @@ use App\Account;
 use App\Brands;
 use App\Business;
 use App\BusinessLocation;
-use App\WarehouseLocation;
 use App\Category;
 use App\Contact;
 use App\CustomerGroup;
@@ -127,6 +126,12 @@ class SellPosController extends Controller
         $business_locations = BusinessLocation::forDropdown($business_id, false);
         $customers = Contact::customersDropdown($business_id, false);
 
+        //Accounts
+        $accounts = [];
+        if ($this->moduleUtil->isModuleEnabled('account')) {
+            $accounts = Account::forDropdown($business_id, true, false);
+        }
+
         $sales_representative = User::forDropdown($business_id, false, false, true);
 
         $is_cmsn_agent_enabled = request()->session()->get('business.sales_cmsn_agnt');
@@ -148,7 +153,7 @@ class SellPosController extends Controller
 
         $shipping_statuses = $this->transactionUtil->shipping_statuses();
 
-        return view('sale_pos.index')->with(compact('business_locations', 'customers', 'sales_representative', 'is_cmsn_agent_enabled', 'commission_agents', 'service_staffs', 'is_tables_enabled', 'is_service_staff_enabled', 'is_types_service_enabled', 'shipping_statuses'));
+        return view('sale_pos.index')->with(compact('business_locations', 'accounts','customers', 'sales_representative', 'is_cmsn_agent_enabled', 'commission_agents', 'service_staffs', 'is_tables_enabled', 'is_service_staff_enabled', 'is_types_service_enabled', 'shipping_statuses'));
     }
 
     /**
@@ -200,16 +205,6 @@ class SellPosController extends Controller
                 $default_location = BusinessLocation::findOrFail($id);
                 break;
             }
-        }
-
-        $warehouse_locations = WarehouseLocation::forDropdown($business_id, false, true);
-        $wh_attributes = $warehouse_locations['attributes'];
-        $warehouse_locations = $warehouse_locations['locations'];
-
-        $wh_location = null;
-        foreach ($warehouse_locations as $id => $name) {
-            $wh_location = WarehouseLocation::findOrFail($id);
-            break;
         }
 
         $payment_types = $this->productUtil->payment_types(null, true, $business_id);
@@ -277,7 +272,6 @@ class SellPosController extends Controller
                 'edit_discount',
                 'edit_price',
                 'business_locations',
-                'warehouse_locations',
                 'bl_attributes',
                 'business_details',
                 'taxes',
@@ -369,7 +363,7 @@ class SellPosController extends Controller
                 }
             }
 
-            if (!empty($input['products'])) {
+            if (!empty($input['products'])) {               
                 $business_id = $request->session()->get('user.business_id');
 
                 //Check if subscribed or not, then check for users quota

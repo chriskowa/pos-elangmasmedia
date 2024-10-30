@@ -1742,13 +1742,24 @@ class ProductUtil extends Util
     public function getProductStockDetails($business_id, $filters, $for)
     {
         $query = Variation::join('products as p', 'p.id', '=', 'variations.product_id')
-                  ->join('units', 'p.unit_id', '=', 'units.id')
-                  ->leftjoin('variation_location_details as vld', 'variations.id', '=', 'vld.variation_id')
-                  ->leftjoin('business_locations as l', 'vld.location_id', '=', 'l.id')
-                  ->leftjoin('categories as c', 'p.category_id', '=', 'c.id')
-                  ->join('product_variations as pv', 'variations.product_variation_id', '=', 'pv.id')
-                  ->where('p.business_id', $business_id)
-                  ->whereIn('p.type', ['single', 'variable']);
+        ->join('units', 'p.unit_id', '=', 'units.id')
+        ->leftJoin('variation_location_details as vld', 'variations.id', '=', 'vld.variation_id')
+        ->leftJoin('business_locations as l', 'vld.location_id', '=', 'l.id')
+        ->leftJoin('categories as c', 'p.category_id', '=', 'c.id')
+        ->join('product_variations as pv', 'variations.product_variation_id', '=', 'pv.id')        
+        ->where('p.business_id', $business_id)
+        ->whereIn('p.type', ['single', 'variable'])        
+        ->select(
+            'variations.*',
+            'p.*',
+            'units.*',
+            'vld.*',
+            'l.*',
+            'c.*',
+            'pv.*',
+            'vt.name as variation_template_name',
+            'vvt.name as variation_value_template_name'
+        );
 
         $permitted_locations = auth()->user()->permitted_locations();
         $location_filter = '';
@@ -1772,6 +1783,12 @@ class ProductUtil extends Util
                   ->where(function ($q) use ($location_id) {
                       $q->where('pl.location_id', $location_id);
                   });
+        }
+
+        if (! empty($filters['variation_id'])) {
+            $variation_id = $filters['variation_id'];                        
+            $query->where('variations.variation_value_id', $variation_id);
+            
         }
 
         if (! empty($filters['category_id'])) {

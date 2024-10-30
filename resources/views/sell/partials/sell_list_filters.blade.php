@@ -7,6 +7,17 @@
     </div>
 </div>
 @endif
+@if(!empty($accounts))
+    
+        <div class="col-md-3">
+            <div class="form-group">
+                {!! Form::label("sell_list_filter_account_id" , __('lang_v1.payment_account') . ':') !!}
+                
+                {!! Form::select("sell_list_filter_account_id", $accounts, !empty($payment_line['account_id']) ? $payment_line['account_id'] : '' , ['class' => 'form-control select2 account-dropdown', 'id' => !$readonly ? "sell_list_filter_account_id" : "sell_list_filter_account_id", 'style' => 'width:100%;', 'disabled' => $readonly]); !!}            
+            </div>
+        </div>
+    
+@endif
 @if(empty($only) || in_array('sell_list_filter_customer_id', $only))
 <div class="col-md-3">
     <div class="form-group">

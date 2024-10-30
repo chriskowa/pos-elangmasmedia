@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\AccountTransaction;
 use App\Business;
 use App\BusinessLocation;
+use App\VariationTemplate;
 use App\Contact;
 use App\CustomerGroup;
 use App\Product;
@@ -248,6 +249,10 @@ class PurchaseController extends Controller
         $bl_attributes = $business_locations['attributes'];
         $business_locations = $business_locations['locations'];
 
+         // Ambil variation untuk bisnis lokasi
+         $variation_values = VariationTemplate::forDropdown($business_id);
+         $variation_values->prepend(__('lang_v1.none'), 'none');
+
         $currency_details = $this->transactionUtil->purchaseCurrencyDetails($business_id);
 
         $default_purchase_status = null;
@@ -279,7 +284,7 @@ class PurchaseController extends Controller
         $common_settings = ! empty(session('business.common_settings')) ? session('business.common_settings') : [];
 
         return view('purchase.create')
-            ->with(compact('taxes', 'orderStatuses', 'business_locations', 'currency_details', 'default_purchase_status', 'customer_groups', 'types', 'shortcuts', 'payment_line', 'payment_types', 'accounts', 'bl_attributes', 'common_settings'));
+            ->with(compact('taxes', 'orderStatuses', 'business_locations', 'variation_values', 'currency_details', 'default_purchase_status', 'customer_groups', 'types', 'shortcuts', 'payment_line', 'payment_types', 'accounts', 'bl_attributes', 'common_settings'));
     }
 
     /**
@@ -971,6 +976,10 @@ class PurchaseController extends Controller
             }
             if (! empty(request()->location_id)) {
                 $q->ForLocation(request()->location_id);
+            }
+            if (! empty(request()->variations_id)) {
+                $variations_id = request()->variations_id;
+                $q->where('variations.variation_value_id', $variations_id);
             }
             $products = $q->get();
 

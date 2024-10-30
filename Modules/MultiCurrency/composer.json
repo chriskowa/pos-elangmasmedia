@@ -1,0 +1,25 @@
+{
+    "name": "nwidart/multicurrency",
+    "description": "",
+    "authors": [
+        {
+            "name": "Usama Kabel",
+            "email": "eng.usamakabel@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\MultiCurrency\\Providers\\MultiCurrencyServiceProvider"
+            ],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\MultiCurrency\\": ""
+        }
+    }
+}

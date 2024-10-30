@@ -90,6 +90,16 @@
                             ]) !!}
                         </div>
                     </div>
+                    <div class="col-md-3" id="variation_filter">
+                        <div class="form-group">
+                            {!! Form::label('variation_id', __('Bisnis Lokasi') . ':') !!}
+                            {!! Form::select('variation_id', $variation_values, null, [
+                                'class' => 'form-control select2',
+                                'style' => 'width:100%',
+                                'placeholder' => __('lang_v1.all'),
+                            ]) !!}
+                        </div>
+                    </div>
                     <div class="col-md-3">
                         <br>
                         <div class="form-group">
@@ -248,6 +258,7 @@
                         d.active_state = $('#active_state').val();
                         d.not_for_selling = $('#not_for_selling').is(':checked');
                         d.location_id = $('#location_id').val();
+                        d.variation_id = $('#variation_id').val();
                         if ($('#repair_model_id').length == 1) {
                             d.repair_model_id = $('#repair_model_id').val();
                         }
@@ -277,8 +288,17 @@
                         name: 'action'
                     },
                     {
+                        data: 'sku',
+                        name: 'products.sku'
+                    },
+                    {
                         data: 'product',
                         name: 'products.name'
+                    },
+                    {
+                        data: 'product_custom_field1',
+                        name: 'products.product_custom_field1',
+                        visible: $('#cf_1').text().length > 0
                     },
                     {
                         data: 'product_locations',
@@ -297,6 +317,11 @@
                             name: 'max_price',
                             searchable: false
                         },
+                        {
+                        data: 'product_custom_field4',
+                        name: 'products.product_custom_field4',
+                        visible: $('#cf_4').text().length > 0
+                    },
                     @endcan {
                         data: 'current_stock',
                         searchable: false
@@ -317,16 +342,7 @@
                         data: 'tax',
                         name: 'tax_rates.name',
                         searchable: false
-                    },
-                    {
-                        data: 'sku',
-                        name: 'products.sku'
-                    },
-                    {
-                        data: 'product_custom_field1',
-                        name: 'products.product_custom_field1',
-                        visible: $('#cf_1').text().length > 0
-                    },
+                    },    
                     {
                         data: 'product_custom_field2',
                         name: 'products.product_custom_field2',
@@ -337,11 +353,7 @@
                         name: 'products.product_custom_field3',
                         visible: $('#cf_3').text().length > 0
                     },
-                    {
-                        data: 'product_custom_field4',
-                        name: 'products.product_custom_field4',
-                        visible: $('#cf_4').text().length > 0
-                    },
+                   
                     {
                         data: 'product_custom_field5',
                         name: 'products.product_custom_field5',
@@ -368,6 +380,17 @@
                             '<i style="margin:auto;" class="fa fa-plus-circle text-success cursor-pointer no-print rack-details" title="' +
                             LANG.details + '"></i>&nbsp;&nbsp;');
                     }
+                      // Tambahkan class selectable_td untuk <td> dan input purchase_price
+                    $(row).find('td').has('input[name="purchase_price"]')
+                        .addClass('selectable_td')
+                        .find('input[name="purchase_price"]').addClass('selectable_td');
+
+                    // Tambahkan class selectable_td untuk <td> dan input selling_price
+                    $(row).find('td').has('input[name="selling_price"]')
+                        .addClass('selectable_td')
+                        .find('input[name="selling_price"]').addClass('selectable_td');
+
+                    // Tambahkan class selectable_td untuk kolom pertama
                     $(row).find('td:eq(0)').attr('class', 'selectable_td');
                 },
                 fnDrawCallback: function(oSettings) {
@@ -530,8 +553,9 @@
             });
 
             $(document).on('change',
-                '#product_list_filter_type, #product_list_filter_category_id, #product_list_filter_brand_id, #product_list_filter_unit_id, #product_list_filter_tax_id, #location_id, #active_state, #repair_model_id',
+                '#product_list_filter_type, #product_list_filter_category_id, #product_list_filter_brand_id, #product_list_filter_unit_id, #product_list_filter_tax_id, #location_id, #variation_id, #active_state, #repair_model_id',
                 function() {
+                    console.log($('#variation_id').val());
                     if ($("#product_list_tab").hasClass('active')) {
                         product_table.ajax.reload();
                     }
@@ -726,6 +750,7 @@
                             url: '/reports/stock-report',
                             data: function(d) {
                                 d.location_id = $('#location_id').val();
+                                d.variation_id = $('#variation_id').val();
                                 d.category_id = $('#product_list_filter_category_id').val();
                                 d.brand_id = $('#product_list_filter_brand_id').val();
                                 d.unit_id = $('#product_list_filter_unit_id').val();

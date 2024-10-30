@@ -31,6 +31,21 @@
 								<input type="hidden" name="discount_type" id="discount_type" value="@if(empty($edit)){{'percentage'}}@else{{$transaction->discount_type}}@endif" data-default="percentage">
 
 								<input type="hidden" name="discount_amount" id="discount_amount" value="@if(empty($edit)) {{@num_format($business_details->default_sales_discount)}} @else {{@num_format($transaction->discount_amount)}} @endif" data-default="{{$business_details->default_sales_discount}}">
+								<!-- Diskon 1 -->
+								<input type="hidden" name="discount_amount_1" id="discount_amount_1" 
+									value="@if(empty($edit)) {{@num_format($business_details->default_sales_discount)}} @else {{@num_format($transaction->discount_amount_1)}} @endif" 
+									data-default="{{$business_details->default_sales_discount}}">
+
+								<!-- Diskon 2 -->
+								<input type="hidden" name="discount_amount_2" id="discount_amount_2" 
+									value="@if(empty($edit)) {{@num_format($transaction->discount_amount_2)}} @else {{@num_format($transaction->discount_amount_2)}} @endif" 
+									data-default="{{@num_format($transaction->discount_amount_2)}}">
+
+								<!-- Diskon 3 -->
+								<input type="hidden" name="discount_amount_3" id="discount_amount_3" 
+									value="@if(empty($edit)) {{@num_format($transaction->discount_amount_3)}} @else {{@num_format($transaction->discount_amount_3)}} @endif" 
+									data-default="{{@num_format($transaction->discount_amount_3)}}">
+
 
 								<input type="hidden" name="rp_redeemed" id="rp_redeemed" value="@if(empty($edit)){{'0'}}@else{{$transaction->rp_redeemed}}@endif">
 

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Account;
 use App\Business;
 use App\BusinessLocation;
-use App\WarehouseLocation;
 use App\Contact;
 use App\CustomerGroup;
 use App\InvoiceScheme;
@@ -178,6 +177,13 @@ class SellController extends Controller
                     ->whereNotNull('transactions.pay_term_number')
                     ->whereNotNull('transactions.pay_term_type')
                     ->whereRaw("IF(transactions.pay_term_type='days', DATE_ADD(transactions.transaction_date, INTERVAL transactions.pay_term_number DAY) < CURDATE(), DATE_ADD(transactions.transaction_date, INTERVAL transactions.pay_term_number MONTH) < CURDATE())");
+            }
+
+            if (request()->has('account_id')) {
+                $account_id = request()->get('account_id');
+                if (! empty($account_id)) {
+                    $sells->where('TPNEW.account_id', $account_id);
+                }
             }
 
             //Add condition for location,used in sales representative expense report
@@ -606,6 +612,12 @@ class SellController extends Controller
         $customers = Contact::customersDropdown($business_id, false);
         $sales_representative = User::forDropdown($business_id, false, false, true);
 
+        //Accounts
+        $accounts = [];
+        if ($this->moduleUtil->isModuleEnabled('account')) {
+            $accounts = Account::forDropdown($business_id, true, false);
+        }
+
         //Commission agent filter
         $is_cmsn_agent_enabled = request()->session()->get('business.sales_cmsn_agnt');
         $commission_agents = [];
@@ -630,7 +642,7 @@ class SellController extends Controller
 
 
         return view('sell.index')
-        ->with(compact('business_locations', 'customers', 'is_woocommerce', 'sales_representative', 'is_cmsn_agent_enabled', 'commission_agents', 'service_staffs', 'is_tables_enabled', 'is_service_staff_enabled', 'is_types_service_enabled', 'shipping_statuses', 'sources', 'payment_types'));
+        ->with(compact('business_locations', 'accounts','customers', 'is_woocommerce', 'sales_representative', 'is_cmsn_agent_enabled', 'commission_agents', 'service_staffs', 'is_tables_enabled', 'is_service_staff_enabled', 'is_types_service_enabled', 'shipping_statuses', 'sources', 'payment_types'));
     }
 
     /**
@@ -674,17 +686,7 @@ class SellController extends Controller
         foreach ($business_locations as $id => $name) {
             $default_location = BusinessLocation::findOrFail($id);
             break;
-        }
-
-        $warehouse_locations = WarehouseLocation::forDropdown($business_id, false, true);
-        $bl_attributes = $warehouse_locations['attributes'];
-        $warehouse_locations = $warehouse_locations['locations'];
-
-        $wh_location = null;
-        foreach ($warehouse_locations as $id => $name) {
-            $wh_location = WarehouseLocation::findOrFail($id);
-            break;
-        }
+        }       
 
         $commsn_agnt_setting = $business_details->sales_cmsn_agnt;
         $commission_agent = [];
@@ -768,8 +770,7 @@ class SellController extends Controller
                 'business_details',
                 'taxes',
                 'walk_in_customer',
-                'business_locations',
-                'warehouse_locations',
+                'business_locations',                
                 'bl_attributes',
                 'default_location',
                 'commission_agent',

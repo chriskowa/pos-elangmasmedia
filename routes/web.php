@@ -131,7 +131,7 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
 
     Route::resource('brands', BrandController::class);
 
-    Route::resource('payment-account', 'PaymentAccountController');
+    //Route::resource('payment-account', 'PaymentAccountController');
 
     Route::resource('tax-rates', TaxRateController::class);
 
@@ -190,6 +190,10 @@ Route::middleware(['setData', 'auth', 'SetSessionData', 'language', 'timezone', 
     Route::post('/products/toggle-woocommerce-sync', [ProductController::class, 'toggleWooCommerceSync']);
 
     Route::resource('products', ProductController::class);
+    //Route::post('products/update-price/{id}', [ProductController::class, 'updatePrice'])->name('products.update-price');
+    Route::put('products/update-price/{id}', [ProductController::class, 'updatePrice'])->name('products.update-price');
+
+
     Route::get('/toggle-subscription/{id}', 'SellPosController@toggleRecurringInvoices');
     Route::post('/sells/pos/get-types-of-service-details', 'SellPosController@getTypesOfServiceDetails');
     Route::get('/sells/subscriptions', 'SellPosController@listSubscriptions');

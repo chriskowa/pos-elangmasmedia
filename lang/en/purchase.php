@@ -13,7 +13,7 @@ return [
 
     'supplier' => 'Supplier',
     'ref_no' => 'Reference No',
-    'business_location' => 'Business Location',
+    'business_location' => 'Warehouse Location',
     'purchases' => 'Purchases',
     'add_payment' => 'Add payment',
     'edit_payment' => 'Edit payment',
@@ -26,7 +26,7 @@ return [
     'amount' => 'Amount',
     'payment_method' => 'Payment Method',
     'no_records_found' => 'No records found',
-    'payment_due' => 'Payment due',
+    'payment_due' => 'Payment jatuh tempo',
     'purchase_total' => 'Purchase total',
     'location' => 'Location',
     'payment_note' => 'Payment Note',

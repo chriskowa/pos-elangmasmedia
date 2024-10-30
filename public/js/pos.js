@@ -858,18 +858,54 @@ $(document).ready(function() {
 
     //Update discount
     $('button#posEditDiscountModalUpdate').click(function() {
-
-        //if discount amount is not valid return false
-        if (!$("#discount_amount_modal").valid()) {
+        // Validasi untuk diskon bertingkat
+        if (!$("#discount_amount_modal_1").valid()) {
             return false;
         }
-        //Close modal
+    
+        // Close modal
         $('div#posEditDiscountModal').modal('hide');
-
-        //Update values
-        $('input#discount_type').val($('select#discount_type_modal').val());
-        __write_number($('input#discount_amount'), __read_number($('input#discount_amount_modal')));
-
+    
+        // Ambil tipe diskon
+        var discount_type = $('select#discount_type_modal').val();
+        $('input#discount_type').val(discount_type);
+    
+        // Ambil subtotal untuk menghitung diskon bertingkat
+        var subtotal = get_subtotal();
+    
+        // Baca nilai diskon bertingkat
+        var discount_1 = parseFloat(__read_number($('input#discount_amount_modal_1')));
+        var discount_2 = parseFloat(__read_number($('input#discount_amount_modal_2')));
+        var discount_3 = parseFloat(__read_number($('input#discount_amount_modal_3')));
+    
+        // Default total diskon (hanya satu diskon yang diisi)
+        var total_discount = discount_1;
+    
+        // Hitung diskon bertingkat jika diskon 2 dan 3 diisi
+        if (!isNaN(discount_2) && discount_2 > 0) {
+            if (discount_type == 'percentage') {
+                total_discount = discount_1 + (subtotal - (subtotal * discount_1 / 100)) * discount_2 / 100;
+            } else if (discount_type == 'fixed') {
+                total_discount = discount_1 + discount_2;
+            }
+        }
+    
+        if (!isNaN(discount_3) && discount_3 > 0) {
+            if (discount_type == 'percentage') {
+                var subtotal_after_2 = subtotal - (subtotal * discount_1 / 100) - (subtotal * discount_2 / 100);
+                total_discount = discount_1 + (subtotal_after_2 * discount_2 / 100) + (subtotal_after_2 * discount_3 / 100);
+            } else if (discount_type == 'fixed') {
+                total_discount += discount_3;
+            }
+        }
+    
+        // Update nilai diskon total untuk masing-masing elemen diskon
+        __write_number($('input#discount_amount'), discount_1);    // Diskon 1
+        __write_number($('input#discount_amount_1'), discount_1);  // Diskon 2
+        __write_number($('input#discount_amount_2'), discount_2);  // Diskon 2
+        __write_number($('input#discount_amount_3'), discount_3);  // Diskon 3
+    
+        // Jika reward point diaktifkan, lakukan validasi
         if ($('#reward_point_enabled').length) {
             var reward_validation = isValidatRewardPoint();
             if (!reward_validation['is_valid']) {
@@ -879,9 +915,11 @@ $(document).ready(function() {
             }
             updateRedeemedAmount();
         }
-
+    
+        // Perbarui total row
         pos_total_row();
     });
+    
 
     //Shipping
     $('button#posShippingModalUpdate').click(function() {
@@ -1029,7 +1067,7 @@ $(document).ready(function() {
     });
 
     //Updates for add sell
-    $('select#discount_type, input#discount_amount, input#shipping_charges, \
+    $('select#discount_type, input#discount_amount, input#discount_amount_1, input#discount_amount_2, input#discount_amount_3, input#shipping_charges, \
         input#rp_redeemed_amount').change(function() {
         pos_total_row();
     });
@@ -1479,6 +1517,38 @@ $(document).ready(function() {
     }, 60000);
 
     set_search_fields();
+
+    // Variabel untuk men-track berapa banyak diskon bertahap
+    
+    let stepCount = 0;
+    // Event untuk menambahkan diskon bertahap
+    $('#add_discount_step').click(function(e){
+        
+        e.preventDefault();
+        stepCount++;
+
+        // HTML untuk diskon bertahap baru
+        let discountHtml = `
+            <div class="discount-step" id="discount_step_${stepCount}">                
+                <div class="form-group">
+                    <label for="discount_value_${stepCount}">Nilai Diskon ${stepCount}:</label>
+                    <input type="text" name="discount_value_${stepCount}" id="discount_value_${stepCount}" class="form-control">
+                </div>
+                <button type="button" class="btn btn-danger remove-step" data-id="${stepCount}">Hapus</button>
+                <hr>
+            </div>
+        `;
+
+        // Append input diskon baru ke kontainer
+        $('#discount_container').append(discountHtml);
+    });
+
+    // Event untuk menghapus diskon bertahap
+    $(document).on('click', '.remove-step', function(){
+        stepCount--;
+        let stepId = $(this).data('id');
+        $('#discount_step_' + stepId).remove();
+    });
 });
 
 function set_payment_type_dropdown() {
@@ -1897,15 +1967,41 @@ function calculate_billing_details(price_total) {
 }
 
 function pos_discount(total_amount) {
-    var calculation_type = $('#discount_type').val();
-    var calculation_amount = __read_number($('#discount_amount'));
+    // Baca tipe perhitungan diskon dan jumlahnya
+    var calculation_type_1 = $('#discount_type').val();
+    var calculation_amount_1 = __read_number($('#discount_amount_1'));
 
-    var discount = __calculate_amount(calculation_type, calculation_amount, total_amount);
+    var calculation_type_2 = calculation_type_1
+    var calculation_amount_2 = __read_number($('#discount_amount_2'));
 
-    $('span#total_discount').text(__currency_trans_from_en(discount, false));
+    var calculation_type_3 = calculation_type_1
+    var calculation_amount_3 = __read_number($('#discount_amount_3'));
 
-    return discount;
+    // Hitung diskon bertingkat
+    var discount_1 = __calculate_amount(calculation_type_1, calculation_amount_1, total_amount);
+    var subtotal_after_discount_1 = total_amount - discount_1;
+
+    var discount_2 = __calculate_amount(calculation_type_2, calculation_amount_2, subtotal_after_discount_1);
+    var subtotal_after_discount_2 = subtotal_after_discount_1 - discount_2;
+
+    var discount_3 = __calculate_amount(calculation_type_3, calculation_amount_3, subtotal_after_discount_2);
+
+    // Total diskon adalah penjumlahan dari semua diskon bertingkat
+    var total_discount = discount_1 + discount_2 + discount_3;
+
+    // Total diskon persentase terhadap subtotal awal
+    var total_discount_percentage = (total_discount / total_amount) * 100;
+
+    // Update input hidden 'discount_amount' untuk disimpan di database sebagai persentase
+    __write_number($('#discount_amount'), total_discount_percentage);
+    
+    // Tampilkan total diskon di UI
+    $('span#total_discount').text(__currency_trans_from_en(total_discount, false));
+
+    return total_discount;
 }
+
+
 
 function pos_order_tax(price_total, discount) {
     var tax_rate_id = $('#tax_rate_id').val();
@@ -2628,31 +2724,45 @@ $(document).on('change', '#recur_interval_type', function() {
 });
 
 function validate_discount_field() {
-    discount_element = $('#discount_amount_modal');
-    discount_type_element = $('#discount_type_modal');
+    // Diskon bertingkat: 3 elemen diskon
+    var discount_elements = [
+        $('#discount_amount_modal_1'),
+        $('#discount_amount_modal_2'),
+        $('#discount_amount_modal_3')
+    ];
+
+    var discount_type_element = $('#discount_type_modal');
 
     if ($('#add_sell_form').length || $('#edit_sell_form').length) {
-        discount_element = $('#discount_amount');
+        discount_elements = [
+            $('#discount_amount'),
+            $('#discount_amount_2'),
+            $('#discount_amount_3')
+        ];
         discount_type_element = $('#discount_type');
     }
-    var max_value = parseFloat(discount_element.data('max-discount'));
-    if (discount_element.val() != '' && !isNaN(max_value)) {
-        if (discount_type_element.val() == 'fixed') {
-            var subtotal = get_subtotal();
-            //get max discount amount
-            max_value = __calculate_amount('percentage', max_value, subtotal)
-        }
 
-        discount_element.rules('add', {
-            'max-value': max_value,
-            messages: {
-                'max-value': discount_element.data('max-discount-error_msg'),
-            },
-        });
-    } else {
-        discount_element.rules("remove", "max-value");      
-    }
-    discount_element.trigger('change');
+    // Loop untuk memvalidasi setiap diskon bertingkat
+    discount_elements.forEach(function(discount_element) {
+        var max_value = parseFloat(discount_element.data('max-discount'));
+        if (discount_element.val() != '' && !isNaN(max_value)) {
+            if (discount_type_element.val() == 'fixed') {
+                var subtotal = get_subtotal();
+                // hitung max diskon jika tipe fixed
+                max_value = __calculate_amount('percentage', max_value, subtotal);
+            }
+
+            discount_element.rules('add', {
+                'max-value': max_value,
+                messages: {
+                    'max-value': discount_element.data('max-discount-error_msg'),
+                },
+            });
+        } else {
+            discount_element.rules("remove", "max-value");
+        }
+        discount_element.trigger('change');
+    });
 }
 
 $(document).on('change', '#discount_type_modal, #discount_type', function() {

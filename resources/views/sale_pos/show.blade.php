@@ -268,7 +268,22 @@
               <td><span class="display_currency pull-right" data-currency_symbol="true">{{ $sell->total_before_tax }}</span></td>
             </tr>
             <tr>
-              <th>{{ __('sale.discount') }}:</th>
+              <th>Diskon 1:</th>
+              <td><b>(-)</b></td>
+              <td><div class="pull-right"><span class="display_currency" @if( $sell->discount_type == 'fixed') data-currency_symbol="true" @endif>{{ $sell->discount_amount_1 }}</span> @if( $sell->discount_type == 'percentage') {{ '%'}} @endif</span></div></td>
+            </tr>
+            <tr>
+              <th>Diskon 2:</th>
+              <td><b>(-)</b></td>
+              <td><div class="pull-right"><span class="display_currency" @if( $sell->discount_type == 'fixed') data-currency_symbol="true" @endif>{{ $sell->discount_amount_2 }}</span> @if( $sell->discount_type == 'percentage') {{ '%'}} @endif</span></div></td>
+            </tr>
+            <tr>
+              <th>Diskon 3:</th>
+              <td><b>(-)</b></td>
+              <td><div class="pull-right"><span class="display_currency" @if( $sell->discount_type == 'fixed') data-currency_symbol="true" @endif>{{ $sell->discount_amount_3 }}</span> @if( $sell->discount_type == 'percentage') {{ '%'}} @endif</span></div></td>
+            </tr>
+            <tr>
+              <th>Total Diskon:</th>
               <td><b>(-)</b></td>
               <td><div class="pull-right"><span class="display_currency" @if( $sell->discount_type == 'fixed') data-currency_symbol="true" @endif>{{ $sell->discount_amount }}</span> @if( $sell->discount_type == 'percentage') {{ '%'}} @endif</span></div></td>
             </tr>

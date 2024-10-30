@@ -149,6 +149,9 @@
     @include('sale_pos.partials.edit_discount_modal', [
         'sales_discount' => $transaction->discount_amount,
         'discount_type' => $transaction->discount_type,
+        'sales_discount_1' => $transaction->discount_amount_1,
+        'sales_discount_2' => $transaction->discount_amount_2,
+        'sales_discount_3' => $transaction->discount_amount_3,
         'rp_redeemed' => $transaction->rp_redeemed,
         'rp_redeemed_amount' => $transaction->rp_redeemed_amount,
         'max_available' => !empty($redeem_details['points']) ? $redeem_details['points'] : 0,

@@ -166,7 +166,7 @@ $(document).ready(function() {
                 source: function(request, response) {
                     $.getJSON(
                         '/purchases/get_products',
-                        { location_id: $('#location_id').val(), term: request.term },
+                        { location_id: $('#location_id').val(), variations_id: $('#variations_id').val(), term: request.term },
                         response
                     );
                 },

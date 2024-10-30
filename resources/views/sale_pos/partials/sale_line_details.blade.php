@@ -1,3 +1,60 @@
+@php
+    // Sort sell lines by variation name
+    $sorted_sell_lines = $sell->sell_lines->sortBy(function($sell_line) {
+        return $sell_line->variations->name ?? '';
+    });
+
+    // Inisialisasi array untuk menyimpan subtotal per variasi
+    $variation_totals = [];
+@endphp
+
+<table class="table @if(!empty($for_ledger)) table-slim mb-0 bg-light-gray @else bg-gray @endif" @if(!empty($for_pdf)) style="width: 100%;" @endif>
+    <tr @if(empty($for_ledger)) class="bg-green" @endif>
+        <th>#</th>
+        <th>{{ __('sale.product') }}</th>
+        <th>{{ __('sale.variation') }}</th>
+        <th>{{ __('sale.qty') }}</th>
+        <th>{{ __('sale.unit_price') }}</th>
+        <th>{{ __('sale.subtotal') }}</th>
+    </tr>
+
+    @foreach($sorted_sell_lines as $index => $sell_line)
+        @php
+            $variation_name = $sell_line->variations->name ?? 'N/A';
+            $subtotal = $sell_line->quantity * $sell_line->unit_price_inc_tax;
+
+            // Tambahkan subtotal per variasi
+            if (!isset($variation_totals[$variation_name])) {
+                $variation_totals[$variation_name] = 0;
+            }
+            $variation_totals[$variation_name] += $subtotal;
+        @endphp
+
+        <tr>
+            <td>{{ $index + 1 }}</td>
+            <td>{{ $sell_line->product->name }}</td>
+            <td>{{ $variation_name }}</td>
+            <td>{{ $sell_line->quantity }} {{ $sell_line->product->unit->short_name }}</td>
+            <td>
+                <span class="display_currency" data-currency_symbol="true">{{ $sell_line->unit_price_inc_tax }}</span>
+            </td>
+            <td>
+                <span class="display_currency" data-currency_symbol="true">{{ $subtotal }}</span>
+            </td>
+        </tr>
+    @endforeach
+
+    <!-- Menampilkan subtotal untuk setiap variasi -->
+    <tr class="bg-light-gray font-weight-bold">
+        <td colspan="5" class="text-right">Penjualan berdasarkan Bisnis Lokasi</td>
+        <td>
+            @foreach($variation_totals as $variation_name => $variation_total)
+                <p>{{ $variation_name }}: <span class="display_currency" data-currency_symbol="true">{{ $variation_total }}</span></p>
+            @endforeach
+        </td>
+    </tr>
+</table>
+
 <table class="table @if(!empty($for_ledger)) table-slim mb-0 bg-light-gray @else bg-gray @endif" @if(!empty($for_pdf)) style="width: 100%;" @endif>
         <tr @if(empty($for_ledger)) class="bg-green" @endif>
         <th>#</th>
@@ -14,9 +71,10 @@
                 @lang('restaurant.service_staff')
             </th>
         @endif
+        <!--<th>Bisnis Lokasi</th>-->
         <th>{{ __('sale.unit_price') }}</th>
         <th>{{ __('sale.discount') }}</th>
-        <th>{{ __('sale.tax') }}</th>
+        <!--<th>{{ __('sale.tax') }}</th>-->
         <th>{{ __('sale.price_inc_tax') }}</th>
         <th>{{ __('sale.subtotal') }}</th>
     </tr>
@@ -79,6 +137,11 @@
                     {{$sell_line->product->second_unit->short_name}}
                 @endif
             </td>
+            <!--<td>
+                @if( $sell_line->product->type == 'variable')                
+                    {{ $sell_line->variations->name ?? ''}}
+                @endif
+            </td>-->
             @if(!empty($pos_settings['inline_service_staff']))
                 <td>
                 {{ $sell_line->service_staff->user_full_name ?? '' }}

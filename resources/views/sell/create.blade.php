@@ -461,21 +461,55 @@
 			    		$default_sales_tax = null;
 			    	}
 			    @endphp
-			    <div class="col-md-4 @if($sale_type == 'sales_order') hide @endif">
-			        <div class="form-group">
-			            {!! Form::label('discount_amount', __('sale.discount_amount') . ':*' ) !!}
-			            <div class="input-group">
-			                <span class="input-group-addon">
-			                    <i class="fa fa-info"></i>
-			                </span>
-			                {!! Form::text('discount_amount', @num_format($sales_discount), ['class' => 'form-control input_number', 'data-default' => $sales_discount, 'data-max-discount' => $max_discount, 'data-max-discount-error_msg' => __('lang_v1.max_discount_error_msg', ['discount' => $max_discount != '' ? @num_format($max_discount) : '']) ]); !!}
-			            </div>
-			        </div>
-			    </div>
-			    <div class="col-md-4 @if($sale_type == 'sales_order') hide @endif"><br>
-			    	<b>@lang( 'sale.discount_amount' ):</b>(-) 
+			    
+				{!! Form::hidden('discount_amount', @num_format($sales_discount), ['id' => 'discount_amount', 'class' => 'form-control input_number', 'data-default' => $sales_discount, 'data-max-discount' => $max_discount, 'data-max-discount-error_msg' => __('lang_v1.max_discount_error_msg', ['discount' => $max_discount != '' ? @num_format($max_discount) : '']) ]); !!}
+
+				<!-- Diskon 1 -->
+				<div class="col-md-4 @if($sale_type == 'sales_order') hide @endif">
+					<div class="form-group">
+						{!! Form::label('discount_amount_1', __('sale.discount_amount') . ' 1:*' ) !!}
+						<div class="input-group">
+							<span class="input-group-addon">
+								<i class="fa fa-info"></i>
+							</span>
+							{!! Form::text('discount_amount_1', @num_format($sales_discount), ['class' => 'form-control input_number', 'data-default' => $sales_discount, 'data-max-discount' => $max_discount, 'data-max-discount-error_msg' => __('lang_v1.max_discount_error_msg', ['discount' => $max_discount != '' ? @num_format($max_discount) : '']) ]); !!}
+						</div>
+					</div>
+				</div>
+
+				<!-- Diskon 2 -->
+				<div class="col-md-4 @if($sale_type == 'sales_order') hide @endif">
+					<div class="form-group">
+						{!! Form::label('discount_amount_2', __('sale.discount_amount') . ' 2:*' ) !!}
+						<div class="input-group">
+							<span class="input-group-addon">
+								<i class="fa fa-info"></i>
+							</span>
+							{!! Form::text('discount_amount_2', 0, ['class' => 'form-control input_number', 'data-max-discount' => $max_discount, 'data-max-discount-error_msg' => __('lang_v1.max_discount_error_msg', ['discount' => $max_discount != '' ? @num_format($max_discount) : '']) ]); !!}
+						</div>
+					</div>
+				</div>
+
+				<!-- Diskon 3 -->
+				<div class="col-md-4 @if($sale_type == 'sales_order') hide @endif">
+					<div class="form-group">
+						{!! Form::label('discount_amount_3', __('sale.discount_amount') . ' 3:*' ) !!}
+						<div class="input-group">
+							<span class="input-group-addon">
+								<i class="fa fa-info"></i>
+							</span>
+							{!! Form::text('discount_amount_3', 0, ['class' => 'form-control input_number', 'data-max-discount' => $max_discount, 'data-max-discount-error_msg' => __('lang_v1.max_discount_error_msg', ['discount' => $max_discount != '' ? @num_format($max_discount) : '']) ]); !!}
+						</div>
+					</div>
+				</div>
+
+				<!-- Display total discount -->
+				<div class="col-md-4 @if($sale_type == 'sales_order') hide @endif"><br>
+					<b>@lang( 'sale.discount_amount' ):</b>(-) 
 					<span class="display_currency" id="total_discount">0</span>
-			    </div>
+				</div>
+
+				<div class="clearfix"></div>
 			    <div class="clearfix"></div>
 			    <div class="col-md-12 well well-sm bg-light-gray @if(session('business.enable_rp') != 1 || $sale_type == 'sales_order') hide @endif">
 			    	<input type="hidden" name="rp_redeemed" id="rp_redeemed" value="0">

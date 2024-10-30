@@ -180,25 +180,7 @@
                     @else
                     {{ $transaction->location->name }}
                     @endif
-                </div>
-                <p><strong>Warehouse: &nbsp;</strong></p>
-                <div style="width: 28%">
-                    @if (empty($transaction->location_id))
-                        @if (count($warehouse_locations) > 1)
-                            {!! Form::select(
-                                'select_warehouse_id',
-                                $warehouse_locations,
-                                $wh_location->id ?? null,
-                                ['class' => 'form-control input-sm', 'id' => 'select_warehouse_id', 'required', 'autofocus'],
-                                $bl_attributes,
-                            ) !!}
-                        @else
-                            {{ $wh_location->name }}
-                        @endif
-                    @else
-                    {{ $transaction->location->name }}
-                    @endif
-                </div>
+                </div>                
                 <div
                     class="tw-hidden md:tw-block tw-bg-[#646EE4] hover:tw-bg-[#414aac] tw-py-1.5 tw-px-2 tw-rounded-md">
                      &nbsp; <span

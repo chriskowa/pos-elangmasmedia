@@ -411,17 +411,80 @@
 			    @php
 			    	$max_discount = !is_null(auth()->user()->max_sales_discount_percent) ? auth()->user()->max_sales_discount_percent : '';
 			    @endphp
-			    <div class="col-md-4 @if($transaction->type == 'sales_order') hide @endif">
-			        <div class="form-group">
-			            {!! Form::label('discount_amount', __('sale.discount_amount') . ':*' ) !!}
-			            <div class="input-group">
-			                <span class="input-group-addon">
-			                    <i class="fa fa-info"></i>
-			                </span>
-			                {!! Form::text('discount_amount', @num_format($transaction->discount_amount), ['class' => 'form-control input_number', 'data-default' => $business_details->default_sales_discount, 'data-max-discount' => $max_discount, 'data-max-discount-error_msg' => __('lang_v1.max_discount_error_msg', ['discount' => $max_discount != '' ? @num_format($max_discount) : '']) ]); !!}
-			            </div>
-			        </div>
-			    </div>
+			    {!! Form::hidden('discount_amount', @num_format($transaction->discount_amount), ['id' => 'discount_amount', 'class' => 'form-control input_number', 'data-default' => $sales_discount, 'data-max-discount' => $max_discount, 'data-max-discount-error_msg' => __('lang_v1.max_discount_error_msg', ['discount' => $max_discount != '' ? @num_format($max_discount) : '']) ]); !!}
+
+				<!-- Diskon 1 -->
+				<div class="col-md-4 @if($sale_type == 'sales_order') hide @endif">
+					<div class="form-group">
+						{!! Form::label('discount_amount_1', __('sale.discount_amount') . ' 1:*' ) !!}
+						<div class="input-group">
+							<span class="input-group-addon">
+								<i class="fa fa-info"></i>
+							</span>
+							{!! Form::text('discount_amount_1', @num_format($transaction->discount_amount_1), ['class' => 'form-control input_number', 'data-default' => $sales_discount, 'data-max-discount' => $max_discount, 'data-max-discount-error_msg' => __('lang_v1.max_discount_error_msg', ['discount' => $max_discount != '' ? @num_format($max_discount) : '']) ]); !!}
+						</div>
+					</div>
+				</div>
+
+				<!-- Diskon 2 -->
+				<div class="col-md-4 @if($sale_type == 'sales_order') hide @endif">
+					<div class="form-group">
+						{!! Form::label('discount_amount_2', __('sale.discount_amount') . ' 2:*' ) !!}
+						<div class="input-group">
+							<span class="input-group-addon">
+								<i class="fa fa-info"></i>
+							</span>
+							{!! Form::text('discount_amount_2', @num_format($transaction->discount_amount_2), ['class' => 'form-control input_number', 'data-max-discount' => $max_discount, 'data-max-discount-error_msg' => __('lang_v1.max_discount_error_msg', ['discount' => $max_discount != '' ? @num_format($max_discount) : '']) ]); !!}
+						</div>
+					</div>
+				</div>
+
+				<!-- Diskon 3 -->
+				<div class="col-md-4 @if($sale_type == 'sales_order') hide @endif">
+					<div class="form-group">
+						{!! Form::label('discount_amount_3', __('sale.discount_amount') . ' 3:*' ) !!}
+						<div class="input-group">
+							<span class="input-group-addon">
+								<i class="fa fa-info"></i>
+							</span>
+							{!! Form::text('discount_amount_3', @num_format($transaction->discount_amount_3), ['class' => 'form-control input_number', 'data-max-discount' => $max_discount, 'data-max-discount-error_msg' => __('lang_v1.max_discount_error_msg', ['discount' => $max_discount != '' ? @num_format($max_discount) : '']) ]); !!}
+						</div>
+					</div>
+				</div>
+
+				<!-- Display total discount -->
+				<div class="col-md-4 @if($sale_type == 'sales_order') hide @endif"><br>
+					<b>@lang( 'sale.discount_amount' ):</b>(-) 
+					<span class="display_currency" id="total_discount">0</span>
+				</div>
+
+				<div class="clearfix"></div>
+				
+				<!-- Reward Points Section (unchanged) -->
+				<div class="col-md-12 well well-sm bg-light-gray @if(session('business.enable_rp') != 1 || $sale_type == 'sales_order') hide @endif">
+					<input type="hidden" name="rp_redeemed" id="rp_redeemed" value="0">
+					<input type="hidden" name="rp_redeemed_amount" id="rp_redeemed_amount" value="0">
+					<div class="col-md-12"><h4>{{session('business.rp_name')}}</h4></div>
+					<div class="col-md-4">
+						<div class="form-group">
+							{!! Form::label('rp_redeemed_modal', __('lang_v1.redeemed') . ':' ) !!}
+							<div class="input-group">
+								<span class="input-group-addon">
+									<i class="fa fa-gift"></i>
+								</span>
+								{!! Form::number('rp_redeemed_modal', 0, ['class' => 'form-control direct_sell_rp_input', 'data-amount_per_unit_point' => session('business.redeem_amount_per_unit_rp'), 'min' => 0, 'data-max_points' => 0, 'data-min_order_total' => session('business.min_order_total_for_redeem') ]); !!}
+								<input type="hidden" id="rp_name" value="{{session('business.rp_name')}}">
+							</div>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<p><strong>@lang('lang_v1.available'):</strong> <span id="available_rp">0</span></p>
+					</div>
+					<div class="col-md-4">
+						<p><strong>@lang('lang_v1.redeemed_amount'):</strong> (-)<span id="rp_redeemed_amount_text">0</span></p>
+					</div>
+				</div>
+
 			    <div class="col-md-4 @if($transaction->type == 'sales_order') hide @endif"><br>
 			    	<b>@lang( 'sale.discount_amount' ):</b>(-) 
 					<span class="display_currency" id="total_discount">0</span>

@@ -11,6 +11,7 @@ use App\PurchaseLine;
 use App\TaxRate;
 use App\Transaction;
 use App\User;
+use App\VariationTemplate;
 use App\Utils\BusinessUtil;
 use App\Utils\ModuleUtil;
 use App\Utils\ProductUtil;
@@ -19,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
 use Yajra\DataTables\Facades\DataTables;
+use App\Events\PurchaseCreatedOrModified;
 
 class PurchaseOrderController extends Controller
 {
@@ -259,6 +261,10 @@ class PurchaseOrderController extends Controller
         $bl_attributes = $business_locations['attributes'];
         $business_locations = $business_locations['locations'];
 
+        // Ambil variation untuk bisnis lokasi
+        $variation_values = VariationTemplate::forDropdown($business_id);
+        $variation_values->prepend(__('lang_v1.none'), 'none');
+
         $currency_details = $this->transactionUtil->purchaseCurrencyDetails($business_id);
 
         $types = [];
@@ -284,7 +290,7 @@ class PurchaseOrderController extends Controller
         $common_settings = ! empty(session('business.common_settings')) ? session('business.common_settings') : [];
 
         return view('purchase_order.create')
-            ->with(compact('taxes', 'business_locations', 'currency_details', 'customer_groups', 'types', 'shortcuts', 'bl_attributes', 'shipping_statuses', 'users', 'common_settings'));
+            ->with(compact('taxes', 'business_locations', 'variation_values', 'currency_details', 'customer_groups', 'types', 'shortcuts', 'bl_attributes', 'shipping_statuses', 'users', 'common_settings'));
     }
 
     /**
@@ -416,6 +422,7 @@ class PurchaseOrderController extends Controller
             }
 
             $this->transactionUtil->activityLog($transaction, 'added');
+            PurchaseCreatedOrModified::dispatch($transaction);
 
             DB::commit();
 
@@ -708,6 +715,7 @@ class PurchaseOrderController extends Controller
             }
 
             $this->transactionUtil->activityLog($transaction, 'edited', $transaction_before);
+            PurchaseCreatedOrModified::dispatch($transaction);
 
             DB::commit();
 
@@ -758,6 +766,7 @@ class PurchaseOrderController extends Controller
                     'ref_no' => $transaction->ref_no,
                 ];
                 $this->transactionUtil->activityLog($transaction, 'po_deleted', null, $log_properities);
+                PurchaseCreatedOrModified::dispatch($transaction);
 
                 $transaction->delete();
 
@@ -917,7 +926,7 @@ class PurchaseOrderController extends Controller
 
                 $activity_property = ['from' => $transaction_before->status, 'to' => $request->input('status')];
                 $this->transactionUtil->activityLog($transaction, 'status_updated', $transaction_before, $activity_property);
-
+                PurchaseCreatedOrModified::dispatch($transaction);
                 $output = [
                     'success' => 1,
                     'msg' => trans('lang_v1.success'),

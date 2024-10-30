@@ -84,6 +84,16 @@
 					{!! Form::select('location_id', $business_locations, $default_location, ['class' => 'form-control select2', 'placeholder' => __('messages.please_select'), 'required'], $bl_attributes); !!}
 				</div>
 			</div>
+			<div class="col-sm-3" id="variation_filter">
+				<div class="form-group">
+					{!! Form::label('variations_id', __('Bisnis Lokasi') . ':') !!}
+					{!! Form::select('variations_id', $variation_values, null, [
+						'class' => 'form-control select2',
+						'style' => 'width:100%',
+						'placeholder' => __('lang_v1.all'),
+					]) !!}
+				</div>
+			</div>
 
 			<!-- Currency Exchange Rate -->
 			<div class="col-sm-3 @if(!$currency_details->purchase_in_diff_currency) hide @endif">

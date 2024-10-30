@@ -14,7 +14,7 @@ $('#sell_list_filter_date_range').on('cancel.daterangepicker', function(ev, pick
     sell_table.ajax.reload();
 });
 
-$(document).on('change', '#sell_list_filter_location_id, #sell_list_filter_customer_id, #sell_list_filter_payment_status, #created_by, #sales_cmsn_agnt, #service_staffs, #shipping_status',  function() {
+$(document).on('change', '#sell_list_filter_location_id, #sell_list_filter_account_id, #sell_list_filter_customer_id, #sell_list_filter_payment_status, #created_by, #sales_cmsn_agnt, #service_staffs, #shipping_status',  function() {
     sell_table.ajax.reload();
 });
 
@@ -42,6 +42,9 @@ sell_table = $('#sell_table').DataTable({
 
                 if($('#sell_list_filter_location_id').length) {
                     d.location_id = $('#sell_list_filter_location_id').val();
+                }
+                if($('#sell_list_filter_account_id').length) {
+                    d.account_id = $('#sell_list_filter_account_id').val();
                 }
                 d.customer_id = $('#sell_list_filter_customer_id').val();
 

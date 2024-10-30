@@ -11,12 +11,20 @@ use App\NotificationTemplate;
 use App\Restaurant\Booking;
 use App\System;
 use Config;
+use Modules\WhatsApp\Services\WhatsAppServices;
 use Notification;
 use App\Contact;
 
 
 class NotificationUtil extends Util
 {
+
+    protected WhatsAppServices $whatsAppUtil;
+
+    public function __construct(WhatsAppServices $whatsAppUtil)
+    {
+        $this->whatsAppUtil = $whatsAppUtil;
+    }
     /**
      * Automatically send notification to customer/supplier if enabled in the template setting
      *
@@ -89,7 +97,7 @@ class NotificationUtil extends Util
                 if (! empty($notification_template->auto_send_wa_notif)) {
                     $data['mobile_number'] = $contact->mobile;
                     if (! empty($contact->mobile)) {
-                        $whatsapp_link = $this->getWhatsappNotificationLink($data);
+                        $this->whatsAppUtil->requestData("sale", $data, "none", "-");
                     }
                 }
             }

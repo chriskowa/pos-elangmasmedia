@@ -1,6 +1,11 @@
 //This file contains all functions used products tab
 
 $(document).ready(function() {
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
     $(document).on('ifChecked', 'input#enable_stock', function() {
         $('div#alert_quantity_div').show();
         $('div#quick_product_opening_stock_div').show();
@@ -574,6 +579,35 @@ $(document).ready(function() {
             height:250
         });
     }
+
+    $(document).on('change', 'input[name="purchase_price"], input[name="selling_price"]', function() {
+        var row = $(this).closest('tr'); // Find the row the input belongs to
+        var product_id = row.find('input.row-select').val(); // Get product ID from the row
+        var purchase_price = row.find('input[name="purchase_price"]').val();
+        var selling_price = row.find('input[name="selling_price"]').val();
+    
+        $.ajax({
+            url: '/products/update-price/'+ product_id, // Backend route to handle the update
+            method: 'POST',
+            data: {
+                _token: $('meta[name="csrf-token"]').attr('content'), // Pass CSRF token manually
+                _method: 'PUT', // Masih bisa menggunakan _method PUT
+                purchase_price: purchase_price,
+                selling_price: selling_price
+            },
+            success: function(response) {
+                if (response.success) {
+                    toastr.success('Prices updated successfully');
+                } else {
+                    toastr.error('Failed to update prices');
+                }
+            },
+            error: function() {
+                toastr.error('An error occurred while updating prices');
+            }
+        });
+    });
+    
 });
 
 function toggle_dsp_input() {

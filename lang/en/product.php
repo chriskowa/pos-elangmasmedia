@@ -11,8 +11,8 @@ return [
     |
     */
 
-    'exc_of_tax' => 'Exc. tax',
-    'inc_of_tax' => 'Inc. tax',
+    'exc_of_tax' => 'Ex Of Tax',
+    'inc_of_tax' => 'HPP',
     'profit_percent' => 'x Margin(%)',
     'add_new_product' => 'Add new product',
     'add_product_for_labels' => 'Add products to generate Labels',
@@ -30,12 +30,12 @@ return [
     'enable_stock_help' => 'Enable stock management at product level',
     'barcode_type' => 'Barcode Type',
     'applicable_tax' => 'Applicable Tax',
-    'selling_price_tax_type' => 'Selling Price Tax Type',
+    'selling_price_tax_type' => 'HET Tax Type',
     'inclusive' => 'Inclusive',
     'exclusive' => 'Exclusive',
     'edit_product' => 'Edit Product',
-    'default_purchase_price' => 'Default Purchase Price',
-    'default_selling_price' => 'Default Selling Price',
+    'default_purchase_price' => 'Default HPP',
+    'default_selling_price' => 'Default HET',
     'value' => 'Value',
     'variation_name' => 'Variation Name',
     'variation_values' => 'Variation Values',

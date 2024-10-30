@@ -73,6 +73,9 @@ class TransactionUtil extends Util
             'tax_id' => ! empty($input['tax_rate_id']) ? $input['tax_rate_id'] : null,
             'discount_type' => ! empty($input['discount_type']) ? $input['discount_type'] : null,
             'discount_amount' => $uf_data ? $this->num_uf($input['discount_amount']) : $input['discount_amount'],
+            'discount_amount_1' => $uf_data ? $this->num_uf($input['discount_amount_1']) : $input['discount_amount_1'],
+            'discount_amount_2' => $uf_data ? $this->num_uf($input['discount_amount_2']) : $input['discount_amount_2'],
+            'discount_amount_3' => $uf_data ? $this->num_uf($input['discount_amount_3']) : $input['discount_amount_3'],
             'tax_amount' => $invoice_total['tax'],
             'final_total' => $final_total,
             'additional_notes' => ! empty($input['sale_note']) ? $input['sale_note'] : null,
@@ -196,6 +199,9 @@ class TransactionUtil extends Util
             'tax_id' => $input['tax_rate_id'],
             'discount_type' => $input['discount_type'],
             'discount_amount' => $uf_data ? $this->num_uf($input['discount_amount']) : $input['discount_amount'],
+            'discount_amount_1' => $uf_data ? $this->num_uf($input['discount_amount_1']) : $input['discount_amount_1'],
+            'discount_amount_2' => $uf_data ? $this->num_uf($input['discount_amount_2']) : $input['discount_amount_2'],
+            'discount_amount_3' => $uf_data ? $this->num_uf($input['discount_amount_3']) : $input['discount_amount_3'],
             'tax_amount' => $invoice_total['tax'],
             'final_total' => $final_total,
             'document' => isset($input['document']) ? $input['document'] : $transaction->document,
@@ -292,6 +298,11 @@ class TransactionUtil extends Util
         $modifiers_formatted = [];
         $combo_lines = [];
         $products_modified_combo = [];
+         // Variabel untuk menampung total sesuai variation_name
+        $total_gj = 0;
+        $total_gm = 0;
+        $total_gmj = 0;
+        
         foreach ($products as $product) {
             $multiplier = 1;
             if (isset($product['sub_unit_id']) && $product['sub_unit_id'] == $product['product_unit_id']) {
@@ -1402,9 +1413,15 @@ class TransactionUtil extends Util
 
         //Discount
         $discount_amount = $this->num_f($transaction->discount_amount, $show_currency, $business_details);
+        $discount_amount_1 = $this->num_f($transaction->discount_amount_1, $show_currency, $business_details);
+        $discount_amount_2 = $this->num_f($transaction->discount_amount_2, $show_currency, $business_details);
+        $discount_amount_3 = $this->num_f($transaction->discount_amount_3, $show_currency, $business_details);
         $output['line_discount_label'] = $invoice_layout->discount_label;
-        $output['discount_label'] = $invoice_layout->discount_label;
-        $output['discount_label'] .= ($transaction->discount_type == 'percentage') ? ' <small>('.$this->num_f($transaction->discount_amount, false, $business_details).'%)</small> :' : '';
+        $output['discount_label'] = $invoice_layout->discount_label;        
+        $output['discount_label'] .= ($transaction->discount_type == 'percentage') ? ' <small>('.$this->num_f($transaction->discount_amount_1, false, $business_details).'%)</small> -' : '';
+        $output['discount_label'] .= ($transaction->discount_type == 'percentage') ? ' <small>('.$this->num_f($transaction->discount_amount_2, false, $business_details).'%)</small> -' : '';
+        $output['discount_label'] .= ($transaction->discount_type == 'percentage') ? ' <small>('.$this->num_f($transaction->discount_amount_3, false, $business_details).'%)</small> -' : '';
+        $output['discount_label'] .= ($transaction->discount_type == 'percentage') ? 'Total Diskon <small>('.$this->num_f($transaction->discount_amount, false, $business_details).'%)</small> :' : '';
 
         if ($transaction->discount_type == 'percentage') {
             $discount = ($transaction->discount_amount / 100) * $transaction->total_before_tax;
@@ -5007,7 +5024,7 @@ class TransactionUtil extends Util
     public function getListSells($business_id, $sale_type = 'sell')
     {
         $sells = Transaction::leftJoin('contacts', 'transactions.contact_id', '=', 'contacts.id')
-                // ->leftJoin('transaction_payments as tp', 'transactions.id', '=', 'tp.transaction_id')
+                ->leftJoin('transaction_payments as TPNEW', 'transactions.id', '=', 'TPNEW.transaction_id')
                 ->leftJoin('transaction_sell_lines as tsl', function ($join) {
                     $join->on('transactions.id', '=', 'tsl.transaction_id')
                         ->whereNull('tsl.parent_sell_line_id');

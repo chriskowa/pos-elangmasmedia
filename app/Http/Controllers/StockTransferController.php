@@ -14,6 +14,8 @@ use DB;
 use Illuminate\Http\Request;
 use Spatie\Activitylog\Models\Activity;
 use App\Events\StockTransferCreatedOrModified;
+use App\Product;
+
 
 class StockTransferController extends Controller
 {
@@ -337,6 +339,9 @@ class StockTransferController extends Controller
                             null,
                             false
                         );
+
+                        // Automatically update product locations
+                        $this->updateProductLocationAfterTransfer($product['product_id'], $purchase_transfer->location_id);
                     }
                 }
 
@@ -370,6 +375,19 @@ class StockTransferController extends Controller
         }
 
         return redirect('stock-transfers')->with('status', $output);
+    }
+
+    // Add this function to handle the product location update after transfer
+    public function updateProductLocationAfterTransfer($product_id, $location_id)
+    {
+        $product = Product::find($product_id);
+        $product_locations = $product->product_locations->pluck('id')->toArray();
+
+        // Add the new location
+        if (!in_array($location_id, $product_locations)) {
+            $product_locations[] = $location_id;
+            $product->product_locations()->sync($product_locations);
+        }
     }
 
     /**
