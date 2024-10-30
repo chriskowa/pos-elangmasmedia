@@ -21,8 +21,9 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./ 
-          server-dir: pos.elangmasmedia.com/
-          method: ftp
+          server-dir: /  # Path root dari akun FTP
+          method: ftps
           port: 21
-         
-           
+          passive: true
+          time-between-retries: 15s
+          retry-count: 5
