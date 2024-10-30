@@ -11,18 +11,19 @@ jobs:
     steps:
       # Langkah 1: Checkout kode dari GitHub
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       # Langkah 2: Upload ke Niagahoster via FTP
       - name: Deploy to Niagahoster
-        if: github.ref == 'refs/heads/main'
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        uses: SamKirkland/FTP-Deploy-Action@4.1.0
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}     
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./ 
+          server-dir: /  # Path root dari akun FTP
+          method: ftps
           port: 21
-          server-dir: pos.elangmasmedia.com/
-          
-         
-           
+          passive: true
+          time-between-retries: 15s
+          retry-count: 5
