@@ -1,6 +1,35 @@
+.env.example
+/lang/ar
+/lang/ce
+/lang/de
+/lang/es
+/lang/fr
+/lang/hi
+/lang/lo
+/lang/nl
+/lang/ps
+/lang/pt
+/lang/ro
+/lang/sq
+/lang/tr
+/lang/vendor
+/lang/vi
+/bootstrap
+/tests
+/Modules
 /node_modules
+/database
 /public/hot
 /public/storage
+/public/audio
+/public/docs
+/public/files
+/public/fonts
+/public/images
+/public/img
+/public/install
+/public/uploads
+/public/vendor
 /storage/*.key
 /storage/
 /vendor
@@ -9,6 +38,7 @@
 Homestead.json
 Homestead.yaml
 npm-debug.log
+.htaccess
 .env
 /public/uploads/business_logos
 /public/uploads/documents
@@ -17,12 +47,14 @@ npm-debug.log
 /public/uploads/invoice_logos
 /public/uploads/UltimatePOS
 /public/uploads/temp
-# /public/css/
-# /public/fonts/
-# /public/images/
+/public/css/
+/public/fonts/
 # /public/modules/
 /public/mix-manifest.json
 .scribe
 /public/docs
-# /public/js/skins/
-# /public/js/icons/
+/public/js/skins/
+/public/js/icons/
+/app/Backup
+/app/Restaurant/
+/config
