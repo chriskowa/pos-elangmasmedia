@@ -21,7 +21,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./ 
-          server-dir: pos.elangmasmedia.com /
+          server-dir: pos.elangmasmedia.com/
           method: ftp
           port: 21
          
