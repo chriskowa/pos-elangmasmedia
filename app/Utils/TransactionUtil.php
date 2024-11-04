@@ -51,6 +51,50 @@ class TransactionUtil extends Util
         $pay_term_number = isset($input['pay_term_number']) ? $input['pay_term_number'] : null;
         $pay_term_type = isset($input['pay_term_type']) ? $input['pay_term_type'] : null;
 
+        // Default nilai untuk uang_gj, uang_gm, uang_gmj
+        $uang_gj = 0;
+        $uang_gm = 0;
+        $uang_gmj = 0;
+
+        // Loop untuk menghitung total berdasarkan variation_name
+        
+      // Loop untuk menghitung total berdasarkan variation_name
+        foreach ($input['products'] as $product) {
+            $variation_id = $product['variation_id'];
+            $variation = Variation::where('id', $variation_id)->first();
+
+            if ($variation) {
+                $variation_name = $variation->name;
+                $unit_price = $uf_data ? $this->num_uf($product['unit_price']) : $product['unit_price'];
+                $quantity = $product['quantity'];
+                $total_price = $unit_price * $quantity;
+
+                // Memisahkan nilai berdasarkan nama variasi sebelum diskon
+                switch ($variation_name) {
+                    case 'GJ':
+                        $uang_gj += $total_price;
+                        break;
+                    case 'GM':
+                        $uang_gm += $total_price;
+                        break;
+                    case 'GMJ':
+                        $uang_gmj += $total_price;
+                        break;
+                }
+            }
+        }
+
+        // Menghitung total sebelum diskon
+        $total_before_discount = $uang_gj + $uang_gm + $uang_gmj;
+
+        // Memperhitungkan diskon proporsional untuk setiap variasi
+        $discount_amount = $uf_data ? $this->num_uf($input['discount_amount']) : $input['discount_amount'];
+        if ($discount_amount > 0 && $total_before_discount > 0) {
+            $uang_gj -= ($uang_gj / $total_before_discount) * $discount_amount;
+            $uang_gm -= ($uang_gm / $total_before_discount) * $discount_amount;
+            $uang_gmj -= ($uang_gmj / $total_before_discount) * $discount_amount;
+        }
+
         //if pay term empty set contact pay term
         if (empty($pay_term_number) || empty($pay_term_type)) {
             $contact = Contact::find($input['contact_id']);
@@ -146,6 +190,9 @@ class TransactionUtil extends Util
             'additional_expense_key_3' => ! empty($input['additional_expense_key_3']) ? $input['additional_expense_key_3'] : null,
             'additional_expense_key_4' => ! empty($input['additional_expense_key_4']) ? $input['additional_expense_key_4'] : null,
             'is_kitchen_order' => ! empty($input['is_kitchen_order']) ? 1 : 0,
+            'uang_gj' => $uang_gj,
+            'uang_gm' => $uang_gm,
+            'uang_gmj' => $uang_gmj,
 
         ]);
 
@@ -182,6 +229,35 @@ class TransactionUtil extends Util
 
         $pay_term_number = isset($input['pay_term_number']) ? $input['pay_term_number'] : null;
         $pay_term_type = isset($input['pay_term_type']) ? $input['pay_term_type'] : null;
+
+         // Default nilai untuk uang_gj, uang_gm, uang_gmj
+        $uang_gj = 0;
+        $uang_gm = 0;
+        $uang_gmj = 0;
+
+        // Loop untuk menghitung total berdasarkan variation_name
+        foreach ($input['products'] as $product) {
+            $variation_id = $product['variation_id'];
+            $variation = Variation::where('product_variation_id', $variation_id)->first();
+
+            if ($variation) {
+                $variation_name = $variation->name;
+                $unit_price = $uf_data ? $this->num_uf($product['unit_price']) : $product['unit_price'];
+
+                // Memisahkan nilai berdasarkan nama variasi
+                switch ($variation_name) {
+                    case 'GJ':
+                        $uang_gj += $unit_price;
+                        break;
+                    case 'GM':
+                        $uang_gm += $unit_price;
+                        break;
+                    case 'GMJ':
+                        $uang_gmj += $unit_price;
+                        break;
+                }
+            }
+        }
 
         //if pay term empty set contact pay term
         if (empty($pay_term_number) || empty($pay_term_type)) {
@@ -267,6 +343,10 @@ class TransactionUtil extends Util
             'additional_expense_key_3' => ! empty($input['additional_expense_key_3']) ? $input['additional_expense_key_3'] : null,
             'additional_expense_key_4' => ! empty($input['additional_expense_key_4']) ? $input['additional_expense_key_4'] : null,
             'is_kitchen_order' => ! empty($input['is_kitchen_order']) ? 1 : 0,
+            'uang_gj' => $uang_gj,
+            'uang_gm' => $uang_gm,
+            'uang_gmj' => $uang_gmj,
+
         ];
 
         if (! empty($input['transaction_date'])) {

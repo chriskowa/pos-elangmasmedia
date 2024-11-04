@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Brands;
 use App\BusinessLocation;
+use App\VariationTemplate;
 use App\CashRegister;
 use App\Category;
 use App\Charts\CommonChart;
@@ -113,7 +114,7 @@ class ReportController extends Controller
             return view('report.partials.profit_loss_details', compact('data'))->render();
         }
 
-        $business_locations = BusinessLocation::forDropdown($business_id, true);
+        $business_locations = BusinessLocation::forDropdown($business_id, true);         
 
         return view('report.profit_loss', compact('business_locations'));
     }
@@ -1910,6 +1911,11 @@ class ReportController extends Controller
                 $query->where('t.location_id', $location_id);
             }
 
+            $variation_new_id = $request->get('variation_new_id', null);
+            if (! empty($variation_new_id)) {
+                $query->where('v.variation_value_id', $variation_new_id);
+            }
+
             $customer_id = $request->get('customer_id', null);
             if (! empty($customer_id)) {
                 $query->where('t.contact_id', $customer_id);
@@ -2004,10 +2010,14 @@ class ReportController extends Controller
         $categories = Category::forDropdown($business_id, 'product');
         $brands = Brands::forDropdown($business_id);
         $customer_group = CustomerGroup::forDropdown($business_id, false, true);
+        $variation_values = VariationTemplate::forDropdown($business_id);
+         $variation_values->prepend(__('lang_v1.none'), 'none');
+
+        
 
         return view('report.product_sell_report')
             ->with(compact('business_locations', 'customers', 'categories', 'brands',
-                'customer_group', 'product_custom_field1', 'product_custom_field2'));
+                'customer_group', 'product_custom_field1', 'product_custom_field2','variation_values'));
     }
 
     /**
@@ -2770,7 +2780,7 @@ class ReportController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function productSellReportBy(Request $request)
+    /*public function productSellReportBy(Request $request)
     {
         if (! auth()->user()->can('purchase_n_sell_report.view')) {
             abort(403, 'Unauthorized action.');
@@ -2875,7 +2885,114 @@ class ReportController extends Controller
                 ->rawColumns(['current_stock', 'subtotal', 'total_qty_sold', 'category_name'])
                 ->make(true);
         }
+    }*/
+    public function productSellReportBy(Request $request)
+    {
+        if (! auth()->user()->can('purchase_n_sell_report.view')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $business_id = $request->session()->get('user.business_id');
+        $location_id = $request->get('location_id', null);
+        $group_by = $request->get('group_by', null);
+
+        $vld_str = '';
+        if (! empty($location_id)) {
+            $vld_str = "AND vld.location_id=$location_id";
+        }
+
+        if ($request->ajax()) {
+            $query = TransactionSellLine::join(
+                'transactions as t',
+                'transaction_sell_lines.transaction_id',
+                '=',
+                't.id'
+            )
+                ->leftJoin('products as p', 'transaction_sell_lines.product_id', '=', 'p.id')
+                ->leftJoin('categories as cat', 'p.category_id', '=', 'cat.id')
+                ->leftJoin('brands as b', 'p.brand_id', '=', 'b.id')
+                ->leftJoin('variations as v', 'transaction_sell_lines.variation_id', '=', 'v.id')
+                ->where('t.business_id', $business_id)
+                ->where('t.type', 'sell')
+                ->where('t.status', 'final')
+                ->select(
+                    'b.name as brand_name',
+                    'cat.name as category_name',
+                    'v.name as variation_name',
+                    DB::raw("(SELECT SUM(vld.qty_available) FROM variation_location_details as vld WHERE vld.variation_id=transaction_sell_lines.variation_id $vld_str) as current_stock"),
+                    DB::raw('SUM(transaction_sell_lines.quantity - transaction_sell_lines.quantity_returned) as total_qty_sold'),
+                    DB::raw('SUM((transaction_sell_lines.quantity - transaction_sell_lines.quantity_returned) * transaction_sell_lines.unit_price_inc_tax) as subtotal'),
+                    'transaction_sell_lines.parent_sell_line_id'
+                );
+
+            // Menggunakan grup berdasarkan pilihan yang ada
+            if ($group_by == 'category') {
+                $query->groupBy('cat.id');
+            } elseif ($group_by == 'brand') {
+                $query->groupBy('b.id');
+            } elseif ($group_by == 'variation') {
+                $query->groupBy('v.name'); // Mengelompokkan berdasarkan nama variasi (GJ, GM, GMJ)
+            }
+
+            $start_date = $request->get('start_date');
+            $end_date = $request->get('end_date');
+            if (! empty($start_date) && ! empty($end_date)) {
+                $query->where('t.transaction_date', '>=', $start_date)
+                    ->where('t.transaction_date', '<=', $end_date);
+            }
+
+            $permitted_locations = auth()->user()->permitted_locations();
+            if ($permitted_locations != 'all') {
+                $query->whereIn('t.location_id', $permitted_locations);
+            }
+
+            if (! empty($location_id)) {
+                $query->where('t.location_id', $location_id);
+            }
+
+            $customer_id = $request->get('customer_id', null);
+            if (! empty($customer_id)) {
+                $query->where('t.contact_id', $customer_id);
+            }
+
+            $customer_group_id = $request->get('customer_group_id', null);
+            if (! empty($customer_group_id)) {
+                $query->leftJoin('contacts AS c', 't.contact_id', '=', 'c.id')
+                    ->leftJoin('customer_groups AS CG', 'c.customer_group_id', '=', 'CG.id')
+                    ->where('CG.id', $customer_group_id);
+            }
+
+            $category_id = $request->get('category_id', null);
+            if (! empty($category_id)) {
+                $query->where('p.category_id', $category_id);
+            }
+
+            $brand_id = $request->get('brand_id', null);
+            if (! empty($brand_id)) {
+                $query->where('p.brand_id', $brand_id);
+            }
+
+            return Datatables::of($query)
+                ->editColumn('category_name', '{{$category_name ?? __("lang_v1.uncategorized")}}')
+                ->editColumn('brand_name', '{{$brand_name ?? __("lang_v1.no_brand")}}')
+                ->editColumn('total_qty_sold', function ($row) {
+                    return '<span data-is_quantity="true" class="display_currency sell_qty" data-currency_symbol=false data-orig-value="'.(float) $row->total_qty_sold.'" data-unit="" >'.(float) $row->total_qty_sold.'</span> '.$row->unit;
+                })
+                ->editColumn('current_stock', function ($row) {
+                    return '<span data-is_quantity="true" class="display_currency current_stock" data-currency_symbol=false data-orig-value="'.(float) $row->current_stock.'" data-unit="">'.(float) $row->current_stock.'</span> ';
+                })
+                ->editColumn('subtotal', function ($row) {
+                    $class = is_null($row->parent_sell_line_id) ? 'row_subtotal' : '';
+
+                    return '<span class="'.$class.'" data-orig-value="'.$row->subtotal.'">'
+                    .$this->transactionUtil->num_f($row->subtotal, true).'</span>';
+                })
+
+                ->rawColumns(['current_stock', 'subtotal', 'total_qty_sold', 'category_name'])
+                ->make(true);
+        }
     }
+
 
     /**
      * Shows product stock details and allows to adjust mismatch

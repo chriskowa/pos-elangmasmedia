@@ -162,7 +162,7 @@
                 @endif
                 @if($sell_line->line_discount_type == 'percentage') ({{$sell_line->line_discount_amount}}%) @endif
             </td>
-            <td>
+            <!--<td>
                 @if(!empty($for_ledger))
                     @format_currency($sell_line->item_tax)
                 @else
@@ -171,7 +171,7 @@
                 @if(!empty($taxes[$sell_line->tax_id]))
                 ( {{ $taxes[$sell_line->tax_id]}} )
                 @endif
-            </td>
+            </td>-->
             <td>
                 @if(!empty($for_ledger))
                     @format_currency($sell_line->unit_price_inc_tax)

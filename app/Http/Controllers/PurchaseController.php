@@ -1432,4 +1432,61 @@ class PurchaseController extends Controller
 
         return $output;
     }
+
+    public function updateVerifiedStatus(Request $request)
+    {
+        if (! auth()->user()->can('purchase.update') && ! auth()->user()->can('purchase.update_status')) {
+            abort(403, 'Unauthorized action.');
+        }
+        //Check if the transaction can be edited or not.
+        $edit_days = request()->session()->get('business.transaction_edit_days');
+        if (! $this->transactionUtil->canBeEdited($request->input('purchase_id'), $edit_days)) {
+            return ['success' => 0,
+                'msg' => __('messages.transaction_edit_not_allowed', ['days' => $edit_days]), ];
+        }
+
+        try {
+            $business_id = request()->session()->get('user.business_id');
+
+            $transaction = Transaction::where('business_id', $business_id)
+                                ->where('type', 'purchase')
+                                ->with(['purchase_lines'])
+                                ->findOrFail($request->input('purchase_id'));
+
+            $before_status = $transaction->status;
+
+            $update_data['checkerStatus'] = $request->input('status');
+
+            DB::beginTransaction();
+
+            //update transaction
+            $transaction->update($update_data);
+
+            $currency_details = $this->transactionUtil->purchaseCurrencyDetails($business_id);
+            foreach ($transaction->purchase_lines as $purchase_line) {
+                $this->productUtil->updateProductStock($before_status, $transaction, $purchase_line->product_id, $purchase_line->variation_id, $purchase_line->quantity, $purchase_line->quantity, $currency_details);
+            }
+
+            //Update mapping of purchase & Sell.
+            $this->transactionUtil->adjustMappingPurchaseSellAfterEditingPurchase($before_status, $transaction, null);
+
+            //Adjust stock over selling if found
+            $this->productUtil->adjustStockOverSelling($transaction);
+
+            DB::commit();
+
+            $output = ['success' => 1,
+                'msg' => __('purchase.purchase_update_success'),
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::emergency('File:'.$e->getFile().'Line:'.$e->getLine().'Message:'.$e->getMessage());
+
+            $output = ['success' => 0,
+                'msg' => $e->getMessage(),
+            ];
+        }
+
+        return $output;
+    }
 }
